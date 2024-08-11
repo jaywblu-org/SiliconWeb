@@ -1,0 +1,27 @@
+﻿@page "/Account/Logout"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Identity
+@using BlazorWebApp.Data
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject ILogger<Login> Logger
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Log out</PageTitle>
+
+@code {
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+       await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+       await SignInManager.SignOutAsync();
+       RedirectManager.RedirectTo("");
+    }
+
+}

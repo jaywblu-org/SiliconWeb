@@ -59,6 +59,7 @@
             {
                 user.EmailConfirmed = true;
                 await UserManager.UpdateAsync(user);
+                RedirectManager.RedirectTo("/account/manage");
             }
         }
         else
