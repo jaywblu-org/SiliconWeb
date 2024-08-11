@@ -1,0 +1,62 @@
+﻿@rendermode InteractiveServer
+
+<div class="subscribe">
+    <div class="container">
+        <h1>Don't want to miss anything?</h1>
+        <p>Sign up for newsletters</p>
+        <EditForm FormName="subscribe" Model="SubscribeForm" OnValidSubmit="OnValidSubmit" method="post" novalidate>
+            <DataAnnotationsValidator />
+            <div id="form-email" class="input-group">
+                <InputText type="email" @bind-Value="SubscribeForm.Email" placeholder="Enter your email"/>
+                @* <span asp-validation-for="Email"></span> *@
+                <ValidationMessage For="@(() => SubscribeForm.Email)" />
+            </div>
+            <button class="btn-theme-s" type="submit">Subscribe *</button>
+        </EditForm>
+        <span class="disclaimer-text">* Yes, I agree to the terms and privacy policy.</span>
+        @if (!string.IsNullOrEmpty(StatusMessage))
+        {
+            <div class="alert alert-success">
+                @StatusMessage
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public string StatusMessage { get; set;  } = null!;
+
+    [SupplyParameterFromForm]
+    public SubscribeFormModel SubscribeForm { get; set; } = new SubscribeFormModel();
+
+    private async Task OnValidSubmit()
+    {
+        try
+        {
+            var result = await Http.PostAsJsonAsync("https://jacsjo-newsletter-provider.azurewebsites.net/api/Subscribe?code=ajQ4gG580zXCBEE0x94-lHarqxFbZs6Cpzt0cTMpFDZbAzFuejCUow%3D%3D", SubscribeForm);
+            if (result.IsSuccessStatusCode)
+            {
+                StatusMessage = "Thank you for subscribing!";
+            }
+            else
+            {
+                StatusMessage = "Something went wrong.";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Something went wrong: {ex.Message}";
+        }
+    }
+
+    public class SubscribeFormModel
+    {
+        [Required(ErrorMessage = "You must enter a valid email")]
+        [DataType(DataType.EmailAddress)]
+        [RegularExpression(@"^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$", ErrorMessage = "Invalid email provided")]
+        public string Email { get; set; } = null!;
+        public bool IsSubscribed { get; set; } = false;
+    }
+
+}

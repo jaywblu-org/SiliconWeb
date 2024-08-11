@@ -1,0 +1,30 @@
+﻿<header>
+    <div class="container">
+        <a id="logo" href="/"><img src="/images/silicon-logo-light_theme.svg" alt="Silicon"></a>
+        <div id="menu">
+            <nav>
+                <NavLink class="menu-link" href="/#showcase">Overview</NavLink>
+                <NavLink class="menu-link" href="/#features">Features</NavLink>
+                <NavLink class="menu-link" href="/contact">Contact</NavLink>
+                <AuthorizeView>
+                    <Authorized>
+                        <NavLink class="menu-link" href="/courses">Courses</NavLink>
+                        <NavLink class="menu-link" href="/admin">Admin Portal</NavLink>
+                    </Authorized>
+                </AuthorizeView>
+            </nav>
+        </div>
+        <div class="account-buttons">
+            <AuthorizeView>
+                <Authorized>
+                    <a class="btn-gray" href="/account/manage"><Icon Name="IconName.Person" /><span>Account</span></a>
+                    <a class="btn-theme" href="/account/logout"><Icon Name="IconName.BoxArrowInLeft" /><span>Sign Out</span></a>
+                </Authorized>
+                <NotAuthorized>
+                    <a class="btn-gray" href="/account/login"><Icon Name="IconName.BoxArrowInRight" /><span>Sign In</span></a>
+                    <a class="btn-theme" href="/account/register"><Icon Name="IconName.Person" /><span>Sign Up</span></a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+    </div>
+</header>

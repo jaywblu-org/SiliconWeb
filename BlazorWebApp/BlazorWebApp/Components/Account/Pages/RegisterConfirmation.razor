@@ -1,0 +1,103 @@
+﻿@page "/Account/RegisterConfirmation"
+
+@using System.Text
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using BlazorWebApp.Data
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IEmailSender<ApplicationUser> EmailSender
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Register confirmation</PageTitle>
+
+<section id="signup">
+    <div class="row">
+        <h1>Register confirmation</h1>
+        <StatusMessage Message="@statusMessage" />
+    </div>
+    <div class="container">
+        <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="ConfirmUser" FormName="confirm">
+            <DataAnnotationsValidator />
+            <h2>Verify your email.</h2>
+            <hr />
+            <p><a @onclick="ResendCode">Resend code</a></p>
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.Code" class="form-control" aria-required="true" placeholder="Enter code" />
+                <label for="first-name">Verification code</label>
+                <ValidationMessage For="() => Input.Code" class="text-danger" />
+            </div>
+            <button type="submit" class="w-100 btn btn-lg btn-primary">Verify code</button>
+        </EditForm>
+    </div>
+</section>
+
+@code {
+    private string? statusMessage;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromQuery]
+    private string? Email { get; set; }
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    public async Task ConfirmUser()
+    {
+        var result = await Http.PostAsJsonAsync("https://jacsjo-verification-provider.azurewebsites.net/api/validate?code=D5ePJPrlMbfQ_954Mq_seMHM2Yd5TOX0PmkaIxe5MqjOAzFuOwzBlQ%3D%3D", new { Email = Email, Code = Input.Code });
+        if (result.IsSuccessStatusCode)
+        {
+            var user = await UserManager.FindByEmailAsync(Email!);
+            if (user != null)
+            {
+                user.EmailConfirmed = true;
+                await UserManager.UpdateAsync(user);
+            }
+        }
+        else
+        {
+            statusMessage = "Invalid code.";
+        }
+
+    }
+
+    private async Task ResendCode() {
+        var result = await Http.PostAsJsonAsync("https://jacsjo-verification-provider.azurewebsites.net/api/GenerateVerificationCodeWithHttp?code=ATtKPFELeWlAaqce09DJ4nFfksebwFrnnpIXDwHWQ3luAzFufU75VQ%3D%3D", new { Email = Email });
+        if (result.IsSuccessStatusCode)
+        {
+            statusMessage = "Code resent, check your mail";
+        }
+        else
+        {
+            statusMessage = "Unable to resend code.";
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Email is null)
+        {
+            RedirectManager.RedirectTo("");
+        }
+
+        var user = await UserManager.FindByEmailAsync(Email);
+        if (user is null)
+        {
+            HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+            statusMessage = "Error finding user for unspecified email";
+        }
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        public string Code { get; set; } = null!;
+    }
+}
